@@ -312,7 +312,7 @@ direction = TO|DOWNTO
 #a='''
 range_ = (
 	range_attribute_name
-	| ( Combine(simple_expression, ' ') + direction + Combine(simple_expression , ' ') )
+	| ( LPAREN + Combine(simple_expression, ' ') + direction + Combine(simple_expression , ' ') + RPAREN)
 	)
 #'''
 range_constraint = ( range_ + Optional(range_ ))
@@ -367,7 +367,6 @@ type_mark = type_name | subtype_name
 resolution_function_name = name
 
 #subtype_indication << ( Optional( resolution_function_name ) + type_mark + Optional(constraint) )
-
 subtype_indication << ( type_mark + Optional(constraint) )
 #discrete_range.setParseAction(found)
 
@@ -459,6 +458,12 @@ sign = oneOf( "+ -" )
 adding_operator = oneOf( "+ - &" )
 
 simple_expression << ( Optional( sign ) + term + ZeroOrMore( adding_operator + term ) )
+
+#simple_expression << operatorPrecedence( primary,
+    #[(sign, 1, opAssoc.RIGHT),
+     #(multiplying_operator, 2, opAssoc.LEFT),
+     #(adding_operator, 2, opAssoc.LEFT),]
+    #)
 #simple_expression.setParseAction(found)
 
 shift_operator = SLL | SRL | SLA | SRA | ROL | ROR

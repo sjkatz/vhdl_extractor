@@ -11,8 +11,8 @@ entity COUNTER is
     RST   : in std_logic := (others=> '0');
     CLK   : in std_logic := '0';
     LOAD  : in std_logic;
-    DATA  : in std_logic_vector(16-5 downto 12) := 29;
-    Q     : out std_logic_vector((WIDTH-2) downto 0));
+    DATA  : in std_logic_vector(16-5 downto 12) := WIDTH - 6;
+    Q     : out std_logic_vector(WIDTH-2 downto 0) := new BIT_VECTOR(1 to 3));
 	
 	begin
     RST   : in std_logic;
