@@ -1,5 +1,6 @@
 import re;
 from pyparsing import *
+import sys;
 #ENTITY\s+(.*)\s+IS\s+(?:GENERIC\s*\((.*)\);)?\s+(?:PORT\s*\((.*)\);)?\s+END(?:\s+ENTITY)?
 
 portList = []
@@ -29,61 +30,63 @@ class generic:
 		self.val = val
 
 def buildGenericList(s,l,t):
-	print 'buildGenericList'
-	global genericList
-	#print 't:', t.asList(), '\n'
-	for elmt in t:
-		num_elmt = len(elmt)
-		lrange = ''
-		rrange = ''
-		direction = ''
-		val = ''
-		name = elmt[0]
-		mode = elmt[1]
-		type = elmt[2]
-		if (num_elmt == 4 ):
-			val = elmt[3]
-		elif (num_elmt == 8 ):
-			lrange = elmt[4]
-			direction = elmt[5]
-			rrange = elmt[6]
-		elif (num_elmt == 9 ):
-			lrange = elmt[4]
-			direction = elmt[5]
-			rrange = elmt[6]
-			val = elmt[8]
-		g = generic(name,mode,type,lrange,direction,rrange,val)
-		genericList = genericList + [g]
+    print 'buildGenericList'
+    global genericList
+    #print 't:', t.asList(), '\n'
+    for elmt in t:
+        print elmt
+        print
+        num_elmt = len(elmt)
+        lrange = ''
+        rrange = ''
+        direction = ''
+        val = ''
+        name = elmt[0]
+        mode = elmt[1]
+        type = elmt[2]
+        if (num_elmt == 4 ):
+            val = elmt[3]
+        elif (num_elmt == 8 ):
+            lrange = elmt[4]
+            direction = elmt[5]
+            rrange = elmt[6]
+        elif (num_elmt == 9 ):
+            lrange = elmt[4]
+            direction = elmt[5]
+            rrange = elmt[6]
+            val = elmt[8]
+        g = generic(name,mode,type,lrange,direction,rrange,val)
+        genericList = genericList + [g]
 
 def buildPortList(s,l,t):
-	print 'buildPortList'
-	global portList
-	#print 't:', t.asList(), '\n'
-	for elmt in t:
-		num_elmt = len(elmt)
-		lrange = ''
-		rrange = ''
-		direction = ''
-		val = ''
-		name = elmt[0]
-		mode = elmt[1]
-		type = elmt[2]
-		if (num_elmt == 4 ):
-			val = elmt[3]
-		elif (num_elmt == 8 ):
-			lrange = elmt[4]
-			direction = elmt[5]
-			rrange = elmt[6]
-		elif (num_elmt == 9 ):
-			lrange = elmt[4]
-			direction = elmt[5]
-			rrange = elmt[6]
-			val = elmt[8]
-		p = port(name,mode,type,lrange,direction,rrange,val)
-		portList = portList + [p]
+    print 'buildPortList'
+    global portList
+    #print 't:', t.asList(), '\n'
+    for elmt in t:
+        print elmt
+        print
+        num_elmt = len(elmt)
+        lrange = ''
+        rrange = ''
+        direction = ''
+        val = ''
+        name = elmt[0]
+        mode = elmt[1]
+        type = elmt[2]
+        if (num_elmt == 4 ):
+            val = elmt[3]
+        elif (num_elmt == 8 ):
+            lrange = elmt[4]
+            direction = elmt[5]
+            rrange = elmt[6]
+        elif (num_elmt == 9 ):
+            lrange = elmt[4]
+            direction = elmt[5]
+            rrange = elmt[6]
+            val = elmt[8]
+        p = port(name,mode,type,lrange,direction,rrange,val)
+        portList = portList + [p]
 
-f = open('example.vhd', 'r')
-content = f.read()
 
 ##########################
 #	PYPARSING IMPLIMENTATION
@@ -134,6 +137,12 @@ OTHERS = CaselessKeyword('others')
 ALL = CaselessKeyword('all')
 NEW = CaselessKeyword('new')
 OPEN = CaselessKeyword('open')
+RANGE = CaselessKeyword('range')
+CONSTANT = CaselessKeyword('constant')
+SIGNAL = CaselessKeyword('signal')
+VARIABLE = CaselessKeyword('variable')
+FILE = CaselessKeyword('file')
+BUS = CaselessKeyword('bus')
 
 E        = CaselessKeyword("E")
 B        = CaselessKeyword("b")
@@ -172,10 +181,11 @@ letter_or_digit = letter | digit
 lower_case_letter = Regex("[a-z]")
 upper_case_letter = Regex("[A-Z]")
 
-SPECIAL = '!"$%?@\\^`{|}~'
+SPECIAL = '" # & \' ( ) * + , - . / ; : < = > _ | ! $ % @ ? [ \ ] ^ ` { } ~'
 #space_character = Regex("[\n\r\t ]")
 space_character = Regex("[\t ]")
-special_character =  Regex('[!$%?@\\^`{|}~]')
+#special_character =  Regex('[!$%?@\\^`{|}~]')
+special_character =  oneOf(SPECIAL)
 
 basic_graphic_character = (
         upper_case_letter
@@ -239,7 +249,7 @@ name = (
 	^ operator_symbol
 	^ selected_name
 	^ indexed_name
-	^ slice_name
+	#^ slice_name           # Probably not neccessary for this type of parser
 	^ attribute_name
 	)
 
@@ -312,13 +322,17 @@ direction = TO|DOWNTO
 #a='''
 range_ = (
 	range_attribute_name
-	| ( LPAREN + Combine(simple_expression, ' ') + direction + Combine(simple_expression , ' ') + RPAREN)
+    #| ( LPAREN + Combine(simple_expression, ' ') + direction + Combine(simple_expression , ' ') + RPAREN)
+	| ( Combine(simple_expression, ' ') + direction + Combine(simple_expression , ' ') )
 	)
 #'''
-range_constraint = ( range_ + Optional(range_ ))
+
+range_constraint =  Suppress( RANGE ) + range_
+#range_constraint = ( range_ + Optional(range_ ))
 #range_constraint = range_
 
-index_constraint = LPAREN + discrete_range + ZeroOrMore( COMMA + discrete_range ) + RPAREN
+index_constraint = Suppress(LPAREN) + discrete_range + ZeroOrMore( COMMA + discrete_range ) + Suppress(RPAREN)
+#index_constraint = LPAREN + discrete_range + ZeroOrMore( COMMA + discrete_range ) + RPAREN
 
 constraint = (
 	range_constraint
@@ -331,7 +345,6 @@ subtype_name = name
 
 a='''
 ##############################################
-#   TO FIX BUG: std_logic_vector(WIDTH - 1 downto )
 subtype_name = (
 #IEEE's STD_LOGIC_1164 Predefined subtypes
          CaselessKeyword("std_logic")
@@ -367,11 +380,12 @@ type_mark = type_name | subtype_name
 resolution_function_name = name
 
 #subtype_indication << ( Optional( resolution_function_name ) + type_mark + Optional(constraint) )
-subtype_indication << ( type_mark + Optional(constraint) )
-#discrete_range.setParseAction(found)
+subtype_indication << ( type_mark + Optional(Group(constraint)) )  # HACK
 
 discrete_subtype_indication = subtype_indication
-discrete_range << ( discrete_subtype_indication | range_ )
+discrete_range << (
+        #discrete_subtype_indication    # BUG: causes 'std_logic_vector(WIDTH - 1 downto 0)' bug
+        range_ )
 
 choice = (
 	simple_expression
@@ -489,8 +503,22 @@ expr = Combine( expression, ' ' )
 
 mode = IN|OUT|INOUT|BUFFER|LINKAGE
 
+interface_constant_declaration = Optional( CONSTANT ) + Group(identifier_list) + COLON + Group(Optional(IN)) + Group(subtype_indication) + Group(Optional(COLON + EQ + expr))
+interface_signal_declaration = Optional( SIGNAL ) + Group(identifier_list) + COLON + Group(Optional(mode)) + Group(subtype_indication) + Optional( BUS ) + Group(Optional(COLON + EQ + expr))
+interface_variable_declaration = Optional( VARIABLE ) + Group(identifier_list) + COLON + Group(Optional(mode)) + Group(subtype_indication) + Group(Optional(COLON + EQ + expr))
+interface_file_declaration = FILE + identifier_list + COLON + subtype_indication
+
+interface_declaration = (
+	interface_constant_declaration
+	^ interface_signal_declaration
+	^ interface_variable_declaration
+	^ interface_file_declaration
+    )
+
+interface_element = interface_declaration
+
 #interface_element = identifier_list + COLON + Optional(mode) + subtype_indication + Optional(COLON + EQ + bnfExpr)
-interface_element = identifier_list + COLON + Optional(mode) + subtype_indication + Optional(COLON + EQ + expr)
+#interface_element = Group(identifier_list) + COLON + Group(Optional(mode)) + Group(subtype_indication) + Group(Optional(COLON + EQ + expr))
 interface_list = Group(interface_element) + ZeroOrMore(SEMI + Group(interface_element))
 #interface_list.setParseAction( buildPortList )
 
@@ -508,16 +536,27 @@ entity_header = Optional( generic_clause ) + Optional( port_clause )
 libraryDef  = Suppress( LIBRARY + identifier + SEMI )
 useDef = Suppress( USE + Word(alphanums+"_"+".") + SEMI )
 #entityDef = Suppress(ENTITY) + identifier + Suppress(IS) + entity_header
-entityDef = Suppress(SkipTo(ENTITY)) + Suppress(ENTITY) + identifier + Suppress(IS) + entity_header + Suppress(Optional(BEGIN + SkipTo(END))) + Suppress(END + ENTITY + Optional(identifier)) + SEMI
+entityDef = Suppress(SkipTo(ENTITY)) + Suppress(ENTITY) + identifier + Suppress(IS) + entity_header + Suppress(Optional(SkipTo(BEGIN) + BEGIN + SkipTo(END))) + Suppress(END + Optional(ENTITY) + Optional(identifier)) + SEMI
+entityDef.setParseAction(found)
 
 #bnf = ZeroOrMore(libraryDef|useDef|entityDef)# <-- grammar defined here
 bnf = ZeroOrMore(entityDef)# <-- grammar defined here
 
 bnf.ignore(bnfComment)
-parsed = bnf.parseString( content )
-print parsed
 
-#a='''
+
+
+#f = open('example.vhd', 'r')
+f = open(sys.argv[1], 'r')
+content = f.read()
+
+parsed = bnf.parseString( content )
+
+a='''
+for p in parsed:
+    print p
+    print
+
 print "GENERICS:"
 for generic in genericList:
     print '\nname:', generic.name, '\n\tmode:', generic.mode, '\n\ttype:', generic.type, '\n\tlrange:', generic.lrange, '\n\tdirection:', generic.direction, '\n\trrange:', generic.rrange, '\n\tval:', generic.val

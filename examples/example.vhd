@@ -6,19 +6,24 @@ use IEEE.numeric_std.all;    -- for the unsigned type
 entity COUNTER is
   generic (
     WIDTH : in natural(16-1 downto 0) := 30 + 1;
-	HEIGHT : in std_logic_vector(16-1 downto 0) := 30+1);
+	HEIGHT : in std_logic_vector(16-1 downto 0) := 30+1;
+	BASE : in std_logic_vector(WIDTH-1 downto 0) := 30+1);
   port (
     RST   : in std_logic := (others=> '0');
+    num_clk: in integer range 0 to 15;
     CLK   : in std_logic := '0';
     LOAD  : in std_logic;
+    DATA  : in std_logic_vector( 0 to WIDTH-1);
+    DATA  : in std_logic_vector( WIDTH-1 downto WIDTH-6);
     DATA  : in std_logic_vector(16-5 downto 12) := WIDTH - 6;
+    --BOB   : in array(7 downto 0, 255 downto 0);
     Q     : out std_logic_vector(WIDTH-2 downto 0) := new BIT_VECTOR(1 to 3));
 	
 	begin
     RST   : in std_logic;
     CLK   : in std_logic;
     LOAD  : in std_logic;
-    DATA  : in std_logic_vector(WIDTH-1 downto 0);
+    DATA  : in std_logic_vector( 0 downto WIDTH-1);
     Q     : out std_logic_vector(WIDTH-1 downto 0)
 end entity COUNTER;
  
