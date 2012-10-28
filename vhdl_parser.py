@@ -158,6 +158,8 @@ HASH       = Literal("#")
 POW  = Literal("**")
 LPAREN = Literal("(")
 RPAREN = Literal(")")
+LBRACK = Literal("[")
+RBRACK = Literal("]")
 UNDERLINE = Literal("_")
 APOS = Literal("'")
 ICOMMA = Literal("\"")
@@ -260,14 +262,14 @@ exponent = E + Optional( "+" ) + integer | E + "-" + integer
 decimal_literal = integer + Optional( DOT + integer ) + Optional( exponent )
 
 base = integer
-#extended_digit = digit | letter
-extended_digit = Regex('[a-zA-Z0-9]')
+extended_digit = digit | letter
+#extended_digit = Regex('[a-zA-Z0-9]')
 based_integer = extended_digit + ZeroOrMore( Optional( UNDERLINE ) + extended_digit )
 based_literal = Combine( base + HASH + based_integer + Optional( DOT + based_integer ) + HASH + Optional( exponent ) )
 #based_literal = base + HASH + based_integer + Optional( DOT + based_integer ) + HASH + Optional( exponent )
 
-#abstract_literal = decimal_literal | based_literal
-abstract_literal =  based_literal | decimal_literal
+abstract_literal = decimal_literal | based_literal
+#abstract_literal =  based_literal | decimal_literal
 physical_literal = Optional( abstract_literal ) + name
 numeric_literal = abstract_literal | physical_literal
 
@@ -291,7 +293,7 @@ simple_expression = Forward()
 subtype_indication = Forward()
 type_mark = Forward()
 
-signature = Optional( Optional( type_mark + ZeroOrMore( COMMA + type_mark ) ) + Optional( RETURN + type_mark ))
+signature = LBRACK + Optional( type_mark + ZeroOrMore( COMMA + type_mark ) ) + Optional( RETURN + type_mark ) + RBRACK
 
 function_call = Forward()
 prefix << (
@@ -379,13 +381,17 @@ type_name = (
 type_mark = type_name | subtype_name
 resolution_function_name = name
 
-#subtype_indication << ( Optional( resolution_function_name ) + type_mark + Optional(constraint) )
+#subtype_indication << (
+        #Optional( resolution_function_name ) + type_mark + Optional(constraint)
+        #^ type_mark + Optional(constraint)
+        #)
 subtype_indication << ( type_mark + Optional(Group(constraint)) )  # HACK
 
 discrete_subtype_indication = subtype_indication
 discrete_range << (
         #discrete_subtype_indication    # BUG: causes 'std_logic_vector(WIDTH - 1 downto 0)' bug
-        range_ )
+        range_
+        )
 
 choice = (
 	simple_expression
@@ -520,7 +526,6 @@ interface_element = interface_declaration
 #interface_element = identifier_list + COLON + Optional(mode) + subtype_indication + Optional(COLON + EQ + bnfExpr)
 #interface_element = Group(identifier_list) + COLON + Group(Optional(mode)) + Group(subtype_indication) + Group(Optional(COLON + EQ + expr))
 interface_list = Group(interface_element) + ZeroOrMore(SEMI + Group(interface_element))
-#interface_list.setParseAction( buildPortList )
 
 generic_list = interface_list
 generic_clause = Suppress(GENERIC) + Suppress(LPAREN) + generic_list + Suppress(RPAREN) + SEMI
