@@ -1,3 +1,12 @@
+#**************************************************
+# AUTHOR        :   Shaun Katz
+# DATE          :   16/11/2012
+# DESCRIPTION   :
+#   A Python-based parser for extracting
+#   port and generic definitions from a vhdl source
+#
+#**************************************************
+
 import re;
 from pyparsing import *
 import sys;

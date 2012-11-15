@@ -1,3 +1,12 @@
+#**************************************************
+# AUTHOR        :   Shaun Katz
+# DATE          :   16/11/2012
+# DESCRIPTION   :
+#   A Python-based parser for extracting
+#   VHDL style expressions
+#
+#**************************************************
+
 # Known Bugs:
 #   * breaks for 'operator' followed by 'sign'
 #       eg. (9 + (-2)) * 3 works but (9 + -2) * 3 doesn't
